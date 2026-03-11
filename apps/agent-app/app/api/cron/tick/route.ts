@@ -56,6 +56,37 @@ async function runJobWithTimeout(job: CronJobRecord) {
   ]);
 }
 
+async function runJobForceAction(job: CronJobRecord) {
+  const messages = await listConversationMessages(job.conversation_id);
+  const history: AgentMessage[] = messages
+    .slice(-20)
+    .map((message) => ({ role: message.role, content: message.content }));
+
+  const integrationHint =
+    job.agent_id === "discord-poster"
+      ? "Use Discord tools and call post_message in this run. Draft content if needed, then post."
+      : "Use Twitter tools and call post_tweet in this run. Draft tweet text if needed, then post.";
+
+  const nextMessages: AgentMessage[] = [
+    ...history,
+    {
+      role: "user",
+      content: `FORCED ACTION RETRY: Execute this scheduled task now by calling at least one tool. Do not ask follow-up questions. ${integrationHint} Task: ${job.prompt}`
+    }
+  ];
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Cron execution exceeded ${MAX_RUNTIME_MS / 1000}s timeout.`));
+    }, MAX_RUNTIME_MS);
+  });
+
+  return Promise.race([
+    runOrchardAgent(nextMessages, undefined, { agentId: job.agent_id, isScheduledRun: true }),
+    timeoutPromise
+  ]);
+}
+
 function getToolNames(toolCalls: unknown[]) {
   return toolCalls
     .map((toolCall) => {
@@ -95,8 +126,13 @@ async function executeCronJob(job: CronJobRecord) {
       content: `Cron job started: ${claimed.name}`
     });
 
-    const result = await runJobWithTimeout(claimed);
-    const toolNames = getToolNames(result.toolCalls);
+    let result = await runJobWithTimeout(claimed);
+    let toolNames = getToolNames(result.toolCalls);
+
+    if (toolNames.length === 0) {
+      result = await runJobForceAction(claimed);
+      toolNames = getToolNames(result.toolCalls);
+    }
 
     if (toolNames.length === 0) {
       throw new Error(
@@ -142,7 +178,7 @@ async function executeCronJob(job: CronJobRecord) {
   }
 }
 
-export async function POST(request: Request) {
+async function handleTick(request: Request) {
   if (!isAuthorized(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -169,4 +205,12 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Unknown cron tick error";
     return Response.json({ error: message }, { status: 500 });
   }
+}
+
+export async function GET(request: Request) {
+  return handleTick(request);
+}
+
+export async function POST(request: Request) {
+  return handleTick(request);
 }
