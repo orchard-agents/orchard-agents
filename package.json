@@ -7,7 +7,10 @@
     "build": "turbo run build",
     "dev:agent": "pnpm --filter agent-app dev",
     "dev:twitter": "pnpm --filter twitter-mcp dev",
-    "dev:discord": "pnpm --filter discord-mcp dev"
+    "dev:discord": "pnpm --filter discord-mcp dev",
+    "dev:web-browse": "pnpm --filter web-browse-mcp dev",
+    "dev:instagram": "pnpm --filter instagram-mcp dev",
+    "dev:linkedin": "pnpm --filter linkedin-mcp dev"
   },
   "devDependencies": {
     "turbo": "^2.5.4",

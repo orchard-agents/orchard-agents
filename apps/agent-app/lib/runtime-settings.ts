@@ -10,15 +10,20 @@ export const GLOBAL_SETTINGS_ID = "__global__";
 export const DEFAULT_AGENT_ID = "twitter-poster";
 const DEFAULT_TWITTER_MCP_URL = "http://localhost:3001/api/mcp";
 const DEFAULT_DISCORD_MCP_URL = "http://localhost:3002/api/mcp";
+const DEFAULT_WEB_BROWSE_MCP_URL = "http://localhost:3003/api/mcp";
+const DEFAULT_INSTAGRAM_MCP_URL = "http://localhost:3004/api/mcp";
+const DEFAULT_LINKEDIN_MCP_URL = "http://localhost:3005/api/mcp";
 
 export interface GlobalSettings {
   anthropicApiKey: string;
+  webBrowseMcpUrl: string;
+  braveApiKey: string;
 }
 
 export interface AgentSettings {
   agentId: string;
   name: string;
-  integration: "twitter" | "discord";
+  integration: "twitter" | "discord" | "instagram" | "linkedin";
   useGlobalAnthropic: boolean;
   anthropicApiKeyOverride: string;
   twitterMcpUrl: string;
@@ -30,6 +35,12 @@ export interface AgentSettings {
   discordBotToken: string;
   discordGuildName: string;
   discordDefaultChannelName: string;
+  instagramMcpUrl: string;
+  facebookAccessToken: string;
+  instagramBusinessAccountId: string;
+  linkedinMcpUrl: string;
+  linkedinAccessToken: string;
+  linkedinPersonUrn: string;
 }
 
 export interface RuntimeSettingsBundle {
@@ -38,8 +49,10 @@ export interface RuntimeSettingsBundle {
 }
 
 export interface EffectiveRuntimeSettings {
-  integration: "twitter" | "discord";
+  integration: "twitter" | "discord" | "instagram" | "linkedin";
   anthropicApiKey: string;
+  webBrowseMcpUrl: string;
+  braveApiKey: string;
   twitterMcpUrl: string;
   twitterApiKey: string;
   twitterApiSecret: string;
@@ -49,6 +62,12 @@ export interface EffectiveRuntimeSettings {
   discordBotToken: string;
   discordGuildName: string;
   discordDefaultChannelName: string;
+  instagramMcpUrl: string;
+  facebookAccessToken: string;
+  instagramBusinessAccountId: string;
+  linkedinMcpUrl: string;
+  linkedinAccessToken: string;
+  linkedinPersonUrn: string;
 }
 
 interface RuntimeStore {
@@ -69,7 +88,29 @@ function getStore() {
 
 function globalFromEnvironment(): GlobalSettings {
   return {
-    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? ""
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+    webBrowseMcpUrl: process.env.WEB_BROWSE_MCP_URL ?? DEFAULT_WEB_BROWSE_MCP_URL,
+    braveApiKey: process.env.BRAVE_API_KEY ?? ""
+  };
+}
+
+function emptyAgentFields(): Omit<AgentSettings, "agentId" | "name" | "integration" | "useGlobalAnthropic" | "anthropicApiKeyOverride"> {
+  return {
+    twitterMcpUrl: process.env.TWITTER_MCP_URL ?? DEFAULT_TWITTER_MCP_URL,
+    twitterApiKey: "",
+    twitterApiSecret: "",
+    twitterAccessToken: "",
+    twitterAccessSecret: "",
+    discordMcpUrl: process.env.DISCORD_MCP_URL ?? DEFAULT_DISCORD_MCP_URL,
+    discordBotToken: "",
+    discordGuildName: "orchard agents",
+    discordDefaultChannelName: "general",
+    instagramMcpUrl: process.env.INSTAGRAM_MCP_URL ?? DEFAULT_INSTAGRAM_MCP_URL,
+    facebookAccessToken: "",
+    instagramBusinessAccountId: "",
+    linkedinMcpUrl: process.env.LINKEDIN_MCP_URL ?? DEFAULT_LINKEDIN_MCP_URL,
+    linkedinAccessToken: "",
+    linkedinPersonUrn: ""
   };
 }
 
@@ -80,15 +121,7 @@ function defaultTwitterAgent(): AgentSettings {
     integration: "twitter",
     useGlobalAnthropic: true,
     anthropicApiKeyOverride: "",
-    twitterMcpUrl: process.env.TWITTER_MCP_URL ?? DEFAULT_TWITTER_MCP_URL,
-    twitterApiKey: "",
-    twitterApiSecret: "",
-    twitterAccessToken: "",
-    twitterAccessSecret: "",
-    discordMcpUrl: process.env.DISCORD_MCP_URL ?? DEFAULT_DISCORD_MCP_URL,
-    discordBotToken: "",
-    discordGuildName: "orchard agents",
-    discordDefaultChannelName: "general"
+    ...emptyAgentFields()
   };
 }
 
@@ -99,15 +132,29 @@ function defaultDiscordAgent(): AgentSettings {
     integration: "discord",
     useGlobalAnthropic: true,
     anthropicApiKeyOverride: "",
-    twitterMcpUrl: process.env.TWITTER_MCP_URL ?? DEFAULT_TWITTER_MCP_URL,
-    twitterApiKey: "",
-    twitterApiSecret: "",
-    twitterAccessToken: "",
-    twitterAccessSecret: "",
-    discordMcpUrl: process.env.DISCORD_MCP_URL ?? DEFAULT_DISCORD_MCP_URL,
-    discordBotToken: "",
-    discordGuildName: "orchard agents",
-    discordDefaultChannelName: "general"
+    ...emptyAgentFields()
+  };
+}
+
+function defaultInstagramAgent(): AgentSettings {
+  return {
+    agentId: "ig-poster",
+    name: "Instagram Poster",
+    integration: "instagram",
+    useGlobalAnthropic: true,
+    anthropicApiKeyOverride: "",
+    ...emptyAgentFields()
+  };
+}
+
+function defaultLinkedinAgent(): AgentSettings {
+  return {
+    agentId: "linkedin-poster",
+    name: "LinkedIn Poster",
+    integration: "linkedin",
+    useGlobalAnthropic: true,
+    anthropicApiKeyOverride: "",
+    ...emptyAgentFields()
   };
 }
 
@@ -128,7 +175,15 @@ function sanitizeAgentSettings(agent: Partial<AgentSettings>, fallbackAgentId = 
       agent.discordMcpUrl || process.env.DISCORD_MCP_URL || DEFAULT_DISCORD_MCP_URL,
     discordBotToken: agent.discordBotToken ?? "",
     discordGuildName: agent.discordGuildName || "orchard agents",
-    discordDefaultChannelName: agent.discordDefaultChannelName || "general"
+    discordDefaultChannelName: agent.discordDefaultChannelName || "general",
+    instagramMcpUrl:
+      agent.instagramMcpUrl || process.env.INSTAGRAM_MCP_URL || DEFAULT_INSTAGRAM_MCP_URL,
+    facebookAccessToken: agent.facebookAccessToken ?? "",
+    instagramBusinessAccountId: agent.instagramBusinessAccountId ?? "",
+    linkedinMcpUrl:
+      agent.linkedinMcpUrl || process.env.LINKEDIN_MCP_URL || DEFAULT_LINKEDIN_MCP_URL,
+    linkedinAccessToken: agent.linkedinAccessToken ?? "",
+    linkedinPersonUrn: agent.linkedinPersonUrn ?? ""
   };
 }
 
@@ -142,7 +197,7 @@ export async function getSettingsBundle(options?: { clientId?: string; forceRefr
 
   const initial: RuntimeSettingsBundle = {
     global: globalFromEnvironment(),
-    agents: [defaultTwitterAgent(), defaultDiscordAgent()]
+    agents: [defaultTwitterAgent(), defaultDiscordAgent(), defaultInstagramAgent(), defaultLinkedinAgent()]
   };
 
   if (isSettingsDatabaseConfigured()) {
@@ -231,6 +286,8 @@ export function resolveEffectiveSettings(bundle: RuntimeSettingsBundle, agentId 
     settings: {
       integration: selectedAgent.integration,
       anthropicApiKey,
+      webBrowseMcpUrl: bundle.global.webBrowseMcpUrl || DEFAULT_WEB_BROWSE_MCP_URL,
+      braveApiKey: bundle.global.braveApiKey,
       twitterMcpUrl: selectedAgent.twitterMcpUrl,
       twitterApiKey: selectedAgent.twitterApiKey,
       twitterApiSecret: selectedAgent.twitterApiSecret,
@@ -239,7 +296,13 @@ export function resolveEffectiveSettings(bundle: RuntimeSettingsBundle, agentId 
       discordMcpUrl: selectedAgent.discordMcpUrl,
       discordBotToken: selectedAgent.discordBotToken,
       discordGuildName: selectedAgent.discordGuildName,
-      discordDefaultChannelName: selectedAgent.discordDefaultChannelName
+      discordDefaultChannelName: selectedAgent.discordDefaultChannelName,
+      instagramMcpUrl: selectedAgent.instagramMcpUrl,
+      facebookAccessToken: selectedAgent.facebookAccessToken,
+      instagramBusinessAccountId: selectedAgent.instagramBusinessAccountId,
+      linkedinMcpUrl: selectedAgent.linkedinMcpUrl,
+      linkedinAccessToken: selectedAgent.linkedinAccessToken,
+      linkedinPersonUrn: selectedAgent.linkedinPersonUrn
     } satisfies EffectiveRuntimeSettings
   };
 }
