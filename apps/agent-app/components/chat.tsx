@@ -164,6 +164,8 @@ export function Chat() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [promptDraft, setPromptDraft] = useState(defaultAgents[0].systemPrompt);
+  const [promptConfirmed, setPromptConfirmed] = useState(false);
 
   const [jobs, setJobs] = useState<CronJob[]>([]);
   const [runs, setRuns] = useState<CronRun[]>([]);
@@ -216,6 +218,11 @@ export function Chat() {
       void loadJobs();
     }
   }, [tab]);
+
+  useEffect(() => {
+    setPromptDraft(selectedAgent.systemPrompt);
+    setPromptConfirmed(false);
+  }, [selectedAgentId]);
 
   useEffect(() => {
     if (!selectedConversationId) {
@@ -565,6 +572,17 @@ export function Chat() {
   }
 
   const canSend = Boolean(input.trim()) && !isLoading;
+  const isPromptDirty = promptDraft !== selectedAgent.systemPrompt;
+
+  function confirmPromptChanges() {
+    setAgents((current) =>
+      current.map((agent) =>
+        agent.id === selectedAgent.id ? { ...agent, systemPrompt: promptDraft } : agent
+      )
+    );
+    setPromptConfirmed(true);
+    setNotice("Agent prompt changes confirmed.");
+  }
 
   return (
     <main className="h-screen bg-neutral-950 text-neutral-100">
@@ -712,18 +730,30 @@ export function Chat() {
 
             <aside className="flex min-h-0 flex-col rounded-xl border border-neutral-800 bg-neutral-900/80 p-3">
               <p className="mb-1 text-sm font-semibold">Agent Prompt</p>
-              <p className="mb-3 text-xs text-neutral-400">Applies immediately for future messages.</p>
+              <p className="mb-3 text-xs text-neutral-400">Edit then click confirm to apply changes.</p>
               <textarea
-                value={selectedAgent.systemPrompt}
-                onChange={(event) =>
-                  setAgents((current) =>
-                    current.map((agent) =>
-                      agent.id === selectedAgent.id ? { ...agent, systemPrompt: event.target.value } : agent
-                    )
-                  )
-                }
+                value={promptDraft}
+                onChange={(event) => {
+                  setPromptDraft(event.target.value);
+                  setPromptConfirmed(false);
+                }}
                 className="min-h-0 flex-1 rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-xs leading-5 outline-none ring-emerald-400 focus:ring-2"
               />
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={confirmPromptChanges}
+                  disabled={!isPromptDirty}
+                  className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-emerald-950 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Confirm prompt changes
+                </button>
+                {promptConfirmed ? (
+                  <p className="text-xs text-emerald-300">Changes confirmed.</p>
+                ) : (
+                  <p className="text-xs text-neutral-400">{isPromptDirty ? "Unsaved changes" : "No changes"}</p>
+                )}
+              </div>
             </aside>
           </div>
         ) : (
