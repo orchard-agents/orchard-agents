@@ -62,10 +62,18 @@ async function runJobForceAction(job: CronJobRecord) {
     .slice(-20)
     .map((message) => ({ role: message.role, content: message.content }));
 
-  const integrationHint =
-    job.agent_id === "discord-poster"
-      ? "Use Discord tools and call post_message in this run. Draft content if needed, then post."
-      : "Use Twitter tools and call post_tweet in this run. Draft tweet text if needed, then post.";
+  const integrationHint = (() => {
+    switch (job.agent_id) {
+      case "discord-poster":
+        return "Use Discord tools and call post_message in this run. Draft content if needed, then post.";
+      case "ig-poster":
+        return "Use Instagram tools and call publish_photo in this run. Images must be at public URLs.";
+      case "linkedin-poster":
+        return "Use LinkedIn tools and call create_text_post or share_article in this run. Draft professional content if needed, then post.";
+      default:
+        return "Use Twitter tools and call post_tweet in this run. Draft tweet text if needed, then post.";
+    }
+  })();
 
   const nextMessages: AgentMessage[] = [
     ...history,

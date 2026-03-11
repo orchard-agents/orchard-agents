@@ -5,12 +5,14 @@ import { useEffect, useMemo, useState } from "react";
 
 interface GlobalSettings {
   anthropicApiKey: string;
+  webBrowseMcpUrl: string;
+  braveApiKey: string;
 }
 
 interface AgentSettings {
   agentId: string;
   name: string;
-  integration: "twitter" | "discord";
+  integration: "twitter" | "discord" | "instagram" | "linkedin";
   useGlobalAnthropic: boolean;
   anthropicApiKeyOverride: string;
   twitterMcpUrl: string;
@@ -22,6 +24,12 @@ interface AgentSettings {
   discordBotToken: string;
   discordGuildName: string;
   discordDefaultChannelName: string;
+  instagramMcpUrl: string;
+  facebookAccessToken: string;
+  instagramBusinessAccountId: string;
+  linkedinMcpUrl: string;
+  linkedinAccessToken: string;
+  linkedinPersonUrn: string;
 }
 
 interface SettingsBundle {
@@ -32,10 +40,12 @@ interface SettingsBundle {
 interface SettingsStatus {
   global: {
     anthropicApiKey: boolean;
+    webBrowseMcpUrl: boolean;
+    braveApiKey: boolean;
   };
   agents: Array<{
     agentId: string;
-    integration: "twitter" | "discord";
+    integration: "twitter" | "discord" | "instagram" | "linkedin";
     useGlobalAnthropic: boolean;
     anthropicApiKeyOverride: boolean;
     twitterMcpUrl: boolean;
@@ -47,11 +57,17 @@ interface SettingsStatus {
     discordBotToken: boolean;
     discordGuildName: boolean;
     discordDefaultChannelName: boolean;
+    instagramMcpUrl: boolean;
+    facebookAccessToken: boolean;
+    instagramBusinessAccountId: boolean;
+    linkedinMcpUrl: boolean;
+    linkedinAccessToken: boolean;
+    linkedinPersonUrn: boolean;
   }>;
 }
 
 const emptyBundle: SettingsBundle = {
-  global: { anthropicApiKey: "" },
+  global: { anthropicApiKey: "", webBrowseMcpUrl: "", braveApiKey: "" },
   agents: []
 };
 
@@ -67,6 +83,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
   const [show, setShow] = useState<Record<string, boolean>>({
     global_anthropic: false,
+    global_braveApiKey: false,
     agent_anthropic: false,
     twitterApiKey: false,
     twitterApiSecret: false,
@@ -76,7 +93,13 @@ export default function SettingsPage() {
     discordMcpUrl: true,
     discordBotToken: false,
     discordGuildName: true,
-    discordDefaultChannelName: true
+    discordDefaultChannelName: true,
+    instagramMcpUrl: true,
+    facebookAccessToken: false,
+    instagramBusinessAccountId: true,
+    linkedinMcpUrl: true,
+    linkedinAccessToken: false,
+    linkedinPersonUrn: true
   });
 
   const selectedAgent = useMemo(
@@ -299,6 +322,75 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <hr className="my-4 border-neutral-800" />
+            <p className="mb-2 text-sm font-medium">Web Browsing</p>
+            <p className="mb-4 text-xs text-neutral-400">
+              Shared web browsing tools available to all agents (search, scrape, extract links).
+            </p>
+
+            <div className="mb-4">
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm">Web Browse MCP URL</label>
+                <span
+                  className={`rounded px-2 py-0.5 text-xs ${
+                    status?.global.webBrowseMcpUrl
+                      ? "bg-emerald-700/60 text-emerald-100"
+                      : "bg-red-900/50 text-red-200"
+                  }`}
+                >
+                  {status?.global.webBrowseMcpUrl ? "Set" : "Missing"}
+                </span>
+              </div>
+              <input
+                type="text"
+                value={settings.global.webBrowseMcpUrl}
+                onChange={(event) =>
+                  setSettings((current) => ({
+                    ...current,
+                    global: { ...current.global, webBrowseMcpUrl: event.target.value }
+                  }))
+                }
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none ring-emerald-400 focus:ring-2"
+              />
+            </div>
+
+            <div className="mb-4">
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm">Brave API Key</label>
+                <span
+                  className={`rounded px-2 py-0.5 text-xs ${
+                    status?.global.braveApiKey
+                      ? "bg-emerald-700/60 text-emerald-100"
+                      : "bg-red-900/50 text-red-200"
+                  }`}
+                >
+                  {status?.global.braveApiKey ? "Set" : "Missing"}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type={show.global_braveApiKey ? "text" : "password"}
+                  value={settings.global.braveApiKey}
+                  onChange={(event) =>
+                    setSettings((current) => ({
+                      ...current,
+                      global: { ...current.global, braveApiKey: event.target.value }
+                    }))
+                  }
+                  className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none ring-emerald-400 focus:ring-2"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShow((current) => ({ ...current, global_braveApiKey: !current.global_braveApiKey }))
+                  }
+                  className="rounded-lg border border-neutral-700 px-3 py-2 text-sm"
+                >
+                  {show.global_braveApiKey ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={() => {
@@ -390,158 +482,90 @@ export default function SettingsPage() {
                   </div>
                 ) : null}
 
-                {selectedAgent.integration === "twitter" ? (
-                  <div className="space-y-4">
-                    {[
-                      {
-                        key: "twitterMcpUrl",
-                        label: "Twitter MCP URL",
-                        statusKey: "twitterMcpUrl",
-                        alwaysShow: true
-                      },
-                      {
-                        key: "twitterApiKey",
-                        label: "Twitter API Key",
-                        statusKey: "twitterApiKey"
-                      },
-                      {
-                        key: "twitterApiSecret",
-                        label: "Twitter API Secret",
-                        statusKey: "twitterApiSecret"
-                      },
-                      {
-                        key: "twitterAccessToken",
-                        label: "Twitter Access Token",
-                        statusKey: "twitterAccessToken"
-                      },
-                      {
-                        key: "twitterAccessSecret",
-                        label: "Twitter Access Secret",
-                        statusKey: "twitterAccessSecret"
-                      }
-                    ].map((field) => {
-                      const fieldKey = field.key as keyof AgentSettings;
-                      const isVisible = field.alwaysShow || show[field.key];
+                {(() => {
+                  const fieldSets: Record<
+                    string,
+                    Array<{ key: string; label: string; statusKey: string; alwaysShow?: boolean }>
+                  > = {
+                    twitter: [
+                      { key: "twitterMcpUrl", label: "Twitter MCP URL", statusKey: "twitterMcpUrl", alwaysShow: true },
+                      { key: "twitterApiKey", label: "Twitter API Key", statusKey: "twitterApiKey" },
+                      { key: "twitterApiSecret", label: "Twitter API Secret", statusKey: "twitterApiSecret" },
+                      { key: "twitterAccessToken", label: "Twitter Access Token", statusKey: "twitterAccessToken" },
+                      { key: "twitterAccessSecret", label: "Twitter Access Secret", statusKey: "twitterAccessSecret" }
+                    ],
+                    discord: [
+                      { key: "discordMcpUrl", label: "Discord MCP URL", statusKey: "discordMcpUrl", alwaysShow: true },
+                      { key: "discordBotToken", label: "Discord Bot Token", statusKey: "discordBotToken" },
+                      { key: "discordGuildName", label: "Default Guild Name", statusKey: "discordGuildName", alwaysShow: true },
+                      { key: "discordDefaultChannelName", label: "Default Channel Name", statusKey: "discordDefaultChannelName", alwaysShow: true }
+                    ],
+                    instagram: [
+                      { key: "instagramMcpUrl", label: "Instagram MCP URL", statusKey: "instagramMcpUrl", alwaysShow: true },
+                      { key: "facebookAccessToken", label: "Facebook Access Token", statusKey: "facebookAccessToken" },
+                      { key: "instagramBusinessAccountId", label: "Instagram Business Account ID", statusKey: "instagramBusinessAccountId", alwaysShow: true }
+                    ],
+                    linkedin: [
+                      { key: "linkedinMcpUrl", label: "LinkedIn MCP URL", statusKey: "linkedinMcpUrl", alwaysShow: true },
+                      { key: "linkedinAccessToken", label: "LinkedIn Access Token", statusKey: "linkedinAccessToken" },
+                      { key: "linkedinPersonUrn", label: "LinkedIn Person URN", statusKey: "linkedinPersonUrn", alwaysShow: true }
+                    ]
+                  };
 
-                      return (
-                        <div key={field.key}>
-                          <div className="mb-1 flex items-center justify-between">
-                            <label className="text-sm">{field.label}</label>
-                            <span
-                              className={`rounded px-2 py-0.5 text-xs ${
-                                selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
-                                  ? "bg-emerald-700/60 text-emerald-100"
-                                  : "bg-red-900/50 text-red-200"
-                              }`}
-                            >
-                              {selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
-                                ? "Set"
-                                : "Missing"}
-                            </span>
-                          </div>
+                  const fields = fieldSets[selectedAgent.integration] ?? [];
 
-                          <div className="flex gap-2">
-                            <input
-                              type={isVisible ? "text" : "password"}
-                              value={(selectedAgent[fieldKey] as string) ?? ""}
-                              onChange={(event) =>
-                                updateSelectedAgent({
-                                  [fieldKey]: event.target.value
-                                } as Partial<AgentSettings>)
-                              }
-                              className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none ring-emerald-400 focus:ring-2"
-                            />
-                            {!field.alwaysShow ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setShow((current) => ({ ...current, [field.key]: !current[field.key] }))
-                                }
-                                className="rounded-lg border border-neutral-700 px-3 py-2 text-sm"
+                  return (
+                    <div className="space-y-4">
+                      {fields.map((field) => {
+                        const fieldKey = field.key as keyof AgentSettings;
+                        const isVisible = field.alwaysShow || show[field.key];
+
+                        return (
+                          <div key={field.key}>
+                            <div className="mb-1 flex items-center justify-between">
+                              <label className="text-sm">{field.label}</label>
+                              <span
+                                className={`rounded px-2 py-0.5 text-xs ${
+                                  selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
+                                    ? "bg-emerald-700/60 text-emerald-100"
+                                    : "bg-red-900/50 text-red-200"
+                                }`}
                               >
-                                {isVisible ? "Hide" : "Show"}
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {[
-                      {
-                        key: "discordMcpUrl",
-                        label: "Discord MCP URL",
-                        statusKey: "discordMcpUrl",
-                        alwaysShow: true
-                      },
-                      {
-                        key: "discordBotToken",
-                        label: "Discord Bot Token",
-                        statusKey: "discordBotToken"
-                      },
-                      {
-                        key: "discordGuildName",
-                        label: "Default Guild Name",
-                        statusKey: "discordGuildName",
-                        alwaysShow: true
-                      },
-                      {
-                        key: "discordDefaultChannelName",
-                        label: "Default Channel Name",
-                        statusKey: "discordDefaultChannelName",
-                        alwaysShow: true
-                      }
-                    ].map((field) => {
-                      const fieldKey = field.key as keyof AgentSettings;
-                      const isVisible = field.alwaysShow || show[field.key];
+                                {selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
+                                  ? "Set"
+                                  : "Missing"}
+                              </span>
+                            </div>
 
-                      return (
-                        <div key={field.key}>
-                          <div className="mb-1 flex items-center justify-between">
-                            <label className="text-sm">{field.label}</label>
-                            <span
-                              className={`rounded px-2 py-0.5 text-xs ${
-                                selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
-                                  ? "bg-emerald-700/60 text-emerald-100"
-                                  : "bg-red-900/50 text-red-200"
-                              }`}
-                            >
-                              {selectedStatus?.[field.statusKey as keyof typeof selectedStatus]
-                                ? "Set"
-                                : "Missing"}
-                            </span>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <input
-                              type={isVisible ? "text" : "password"}
-                              value={(selectedAgent[fieldKey] as string) ?? ""}
-                              onChange={(event) =>
-                                updateSelectedAgent({
-                                  [fieldKey]: event.target.value
-                                } as Partial<AgentSettings>)
-                              }
-                              className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none ring-emerald-400 focus:ring-2"
-                            />
-                            {!field.alwaysShow ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setShow((current) => ({ ...current, [field.key]: !current[field.key] }))
+                            <div className="flex gap-2">
+                              <input
+                                type={isVisible ? "text" : "password"}
+                                value={(selectedAgent[fieldKey] as string) ?? ""}
+                                onChange={(event) =>
+                                  updateSelectedAgent({
+                                    [fieldKey]: event.target.value
+                                  } as Partial<AgentSettings>)
                                 }
-                                className="rounded-lg border border-neutral-700 px-3 py-2 text-sm"
-                              >
-                                {isVisible ? "Hide" : "Show"}
-                              </button>
-                            ) : null}
+                                className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none ring-emerald-400 focus:ring-2"
+                              />
+                              {!field.alwaysShow ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShow((current) => ({ ...current, [field.key]: !current[field.key] }))
+                                  }
+                                  className="rounded-lg border border-neutral-700 px-3 py-2 text-sm"
+                                >
+                                  {isVisible ? "Hide" : "Show"}
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 <button
                   type="button"

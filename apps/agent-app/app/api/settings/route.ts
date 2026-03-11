@@ -18,7 +18,9 @@ function mcpConfigUrlFromMcpUrl(mcpUrl: string) {
 function mapStatus(bundle: Awaited<ReturnType<typeof getSettingsBundle>>) {
   return {
     global: {
-      anthropicApiKey: Boolean(bundle.global.anthropicApiKey)
+      anthropicApiKey: Boolean(bundle.global.anthropicApiKey),
+      webBrowseMcpUrl: Boolean(bundle.global.webBrowseMcpUrl),
+      braveApiKey: Boolean(bundle.global.braveApiKey)
     },
     agents: bundle.agents.map((agent) => ({
       agentId: agent.agentId,
@@ -33,7 +35,13 @@ function mapStatus(bundle: Awaited<ReturnType<typeof getSettingsBundle>>) {
       discordMcpUrl: Boolean(agent.discordMcpUrl),
       discordBotToken: Boolean(agent.discordBotToken),
       discordGuildName: Boolean(agent.discordGuildName),
-      discordDefaultChannelName: Boolean(agent.discordDefaultChannelName)
+      discordDefaultChannelName: Boolean(agent.discordDefaultChannelName),
+      instagramMcpUrl: Boolean(agent.instagramMcpUrl),
+      facebookAccessToken: Boolean(agent.facebookAccessToken),
+      instagramBusinessAccountId: Boolean(agent.instagramBusinessAccountId),
+      linkedinMcpUrl: Boolean(agent.linkedinMcpUrl),
+      linkedinAccessToken: Boolean(agent.linkedinAccessToken),
+      linkedinPersonUrn: Boolean(agent.linkedinPersonUrn)
     }))
   };
 }
@@ -79,6 +87,62 @@ async function syncDiscordCredentials(agent: AgentSettings) {
   });
 }
 
+async function syncInstagramCredentials(agent: AgentSettings) {
+  if (agent.integration !== "instagram") {
+    return;
+  }
+
+  const configUrl = mcpConfigUrlFromMcpUrl(agent.instagramMcpUrl);
+
+  await fetch(configUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      facebookAccessToken: agent.facebookAccessToken,
+      instagramBusinessAccountId: agent.instagramBusinessAccountId
+    })
+  });
+}
+
+async function syncLinkedinCredentials(agent: AgentSettings) {
+  if (agent.integration !== "linkedin") {
+    return;
+  }
+
+  const configUrl = mcpConfigUrlFromMcpUrl(agent.linkedinMcpUrl);
+
+  await fetch(configUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      linkedinAccessToken: agent.linkedinAccessToken,
+      linkedinPersonUrn: agent.linkedinPersonUrn
+    })
+  });
+}
+
+async function syncWebBrowseCredentials(global: GlobalSettings) {
+  if (!global.webBrowseMcpUrl) {
+    return;
+  }
+
+  const configUrl = mcpConfigUrlFromMcpUrl(global.webBrowseMcpUrl);
+
+  await fetch(configUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      braveApiKey: global.braveApiKey
+    })
+  });
+}
+
 export async function GET() {
   const bundle = await getSettingsBundle({
     clientId: DEFAULT_CLIENT_ID,
@@ -102,6 +166,8 @@ export async function POST(request: Request) {
         clientId: DEFAULT_CLIENT_ID
       });
 
+      await syncWebBrowseCredentials(body.global);
+
       return Response.json({ ok: true, settings: bundle, status: mapStatus(bundle) });
     }
 
@@ -111,6 +177,8 @@ export async function POST(request: Request) {
 
     await syncTwitterCredentials(body.agent);
     await syncDiscordCredentials(body.agent);
+    await syncInstagramCredentials(body.agent);
+    await syncLinkedinCredentials(body.agent);
 
     return Response.json({ ok: true, settings: bundle, status: mapStatus(bundle) });
   } catch (error) {
