@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { UserButton } from "@clerk/nextjs";
 
 interface GlobalSettings {
   anthropicApiKey: string;
@@ -216,9 +217,12 @@ export default function SettingsPage() {
       <div className="mx-auto w-full max-w-5xl rounded-xl border border-neutral-800 bg-neutral-900/80 p-5">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Settings</h1>
-          <Link href="/" className="rounded-lg border border-neutral-700 px-3 py-1 text-sm">
-            Back to mailbox
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="rounded-lg border border-neutral-700 px-3 py-1 text-sm">
+              Back to mailbox
+            </Link>
+            <UserButton />
+          </div>
         </div>
 
         <div className="mb-5 flex gap-2">

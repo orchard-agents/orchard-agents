@@ -9,6 +9,7 @@ This repo is designed so another coding agent can continue without chat history.
 - Secure encrypted credential persistence in Supabase
 - Recurring tasks with execution logs
 - Scheduled runs are action-enforced (no tool call => run fails)
+- Clerk authentication protects UI and most API routes
 
 ## Core Files
 
@@ -25,6 +26,10 @@ This repo is designed so another coding agent can continue without chat history.
 `apps/agent-app/.env.local`:
 
 - `ANTHROPIC_API_KEY`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
+- `CLERK_ALLOWED_EMAILS`
 - `TWITTER_MCP_URL`
 - `DISCORD_MCP_URL`
 - `SUPABASE_URL`
@@ -58,11 +63,11 @@ Run/refresh SQL schema using:
 ## Known Constraints
 
 - Vercel Hobby does not support frequent native cron; use external scheduler for 15-min heartbeat.
-- Scheduled tasks are currently single-client (`default-client`) until auth/multi-tenant is added.
+- Scheduled tasks are currently single-client (`default-client`) even though auth is enabled.
 
 ## Recommended Next Steps
 
-1. Add auth and true `client_id` scoping
+1. Add true `client_id` scoping from authenticated identity
 2. Add run-now button in UI for recurring tasks
 3. Add per-task allowed-tool constraints
 4. Add structured action evidence fields in DB (tool names/ids)

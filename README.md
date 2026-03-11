@@ -56,6 +56,13 @@ corepack pnpm install
 
 Use `.env.example` in each app as a template.
 
+For `apps/agent-app/.env.local`, add Clerk keys:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
+- `CLERK_ALLOWED_EMAILS=hugo@orchardstreet.xyz`
+
 3) Run services (separate terminals)
 
 ```bash
@@ -65,6 +72,23 @@ corepack pnpm --filter agent-app dev
 ```
 
 Open `http://localhost:3000`.
+
+## Authentication (Clerk)
+
+- App routes are protected by Clerk middleware.
+- Access is additionally constrained by `CLERK_ALLOWED_EMAILS` in middleware.
+- Public routes are:
+  - `/sign-in`
+  - `/forbidden`
+  - `POST /api/cron/tick` (still protected by `CRON_SECRET`)
+  - `POST /api/telegram/webhook` (Telegram inbound)
+- All other UI and API routes require a signed-in Clerk session.
+
+Recommended Clerk dashboard setup for this project:
+
+- Enable Google and Email/Password sign-in methods.
+- Enable Restricted mode if you only want invited users to access the app.
+- Invite only approved users (for example `hugo@orchardstreet.xyz`).
 
 ## Production
 

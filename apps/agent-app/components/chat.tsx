@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { UserButton } from "@clerk/nextjs";
 import { ORCHARD_DISCORD_SYSTEM_PROMPT, ORCHARD_TWITTER_SYSTEM_PROMPT } from "@/lib/agent";
 
 interface AgentMessage {
@@ -615,6 +616,7 @@ export function Chat() {
             <Link href="/settings" className="rounded-lg border border-neutral-700 px-3 py-1 text-sm">
               Settings
             </Link>
+            <UserButton />
           </div>
         </header>
 
