@@ -1,80 +1,46 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { AUTH_COOKIE_NAME, AUTH_COOKIE_VALUE } from "@/lib/password-auth";
 
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/forbidden(.*)",
-  "/api/cron/tick(.*)",
-  "/api/telegram/webhook(.*)"
-]);
-
-const isApiRoute = createRouteMatcher(["/api/(.*)"]);
-const allowedEmails = new Set(
-  (process.env.CLERK_ALLOWED_EMAILS ?? "hugo@orchardstreet.xyz")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
-);
-
-function getEmailFromSessionClaims(sessionClaims: unknown): string | null {
-  if (!sessionClaims || typeof sessionClaims !== "object") {
-    return null;
-  }
-
-  const claims = sessionClaims as Record<string, unknown>;
-  const directCandidates = [
-    claims.email,
-    claims.primary_email_address,
-    claims.primaryEmailAddress,
-    claims.primary_email
-  ];
-
-  for (const candidate of directCandidates) {
-    if (typeof candidate === "string" && candidate.trim().length > 0) {
-      return candidate.trim().toLowerCase();
-    }
-  }
-
-  if (Array.isArray(claims.email_addresses)) {
-    const primary = claims.email_addresses.find((entry) => {
-      if (!entry || typeof entry !== "object") {
-        return false;
-      }
-      return (entry as Record<string, unknown>).primary === true;
-    });
-
-    if (primary && typeof primary === "object") {
-      const emailAddress = (primary as Record<string, unknown>).email_address;
-      if (typeof emailAddress === "string" && emailAddress.trim().length > 0) {
-        return emailAddress.trim().toLowerCase();
-      }
-    }
-  }
-
-  return null;
+function isPublicPath(pathname: string): boolean {
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/api/auth/login" ||
+    pathname === "/api/auth/logout" ||
+    pathname === "/api/cron/tick" ||
+    pathname.startsWith("/api/cron/tick/") ||
+    pathname === "/api/telegram/webhook" ||
+    pathname.startsWith("/api/telegram/webhook/")
+  );
 }
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isPublicRoute(req)) {
+function isApiPath(pathname: string): boolean {
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
+
+export default function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+
+  if (isPublicPath(pathname)) {
     return;
   }
 
-  const authState = await auth();
-  await auth.protect();
+  const sessionCookie = req.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-  const sessionEmail = getEmailFromSessionClaims(authState.sessionClaims);
-
-  if (sessionEmail && allowedEmails.has(sessionEmail)) {
+  if (sessionCookie === AUTH_COOKIE_VALUE) {
     return;
   }
 
-  if (isApiRoute(req)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (isApiPath(pathname)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const forbiddenUrl = new URL("/forbidden", req.url);
-  return NextResponse.redirect(forbiddenUrl);
-});
+  const loginUrl = new URL("/login", req.url);
+  const nextPath = `${pathname}${req.nextUrl.search}`;
+  loginUrl.searchParams.set("next", nextPath);
+  return NextResponse.redirect(loginUrl);
+}
 
 export const config = {
   matcher: [

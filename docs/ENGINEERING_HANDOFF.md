@@ -9,7 +9,7 @@ This repo is designed so another coding agent can continue without chat history.
 - Secure encrypted credential persistence in Supabase
 - Recurring tasks with execution logs
 - Scheduled runs are action-enforced (no tool call => run fails)
-- Clerk authentication protects UI and most API routes
+- Password authentication protects UI and most API routes
 
 ## Core Files
 
@@ -26,10 +26,8 @@ This repo is designed so another coding agent can continue without chat history.
 `apps/agent-app/.env.local`:
 
 - `ANTHROPIC_API_KEY`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
-- `CLERK_ALLOWED_EMAILS`
+- `APP_PASSWORD`
+- `APP_AUTH_COOKIE_VALUE`
 - `TWITTER_MCP_URL`
 - `DISCORD_MCP_URL`
 - `SUPABASE_URL`

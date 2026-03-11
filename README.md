@@ -56,12 +56,10 @@ corepack pnpm install
 
 Use `.env.example` in each app as a template.
 
-For `apps/agent-app/.env.local`, add Clerk keys:
+For `apps/agent-app/.env.local`, add password auth values:
 
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-- `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
-- `CLERK_ALLOWED_EMAILS=hugo@orchardstreet.xyz`
+- `APP_PASSWORD=Orchardagents123`
+- `APP_AUTH_COOKIE_VALUE=orchard-authenticated`
 
 3) Run services (separate terminals)
 
@@ -73,22 +71,17 @@ corepack pnpm --filter agent-app dev
 
 Open `http://localhost:3000`.
 
-## Authentication (Clerk)
+## Authentication (Password)
 
-- App routes are protected by Clerk middleware.
-- Access is additionally constrained by `CLERK_ALLOWED_EMAILS` in middleware.
+- App routes are protected by password middleware.
+- Login page is `/login`.
 - Public routes are:
-  - `/sign-in`
-  - `/forbidden`
+  - `/login`
+  - `POST /api/auth/login`
+  - `POST /api/auth/logout`
   - `POST /api/cron/tick` (still protected by `CRON_SECRET`)
   - `POST /api/telegram/webhook` (Telegram inbound)
-- All other UI and API routes require a signed-in Clerk session.
-
-Recommended Clerk dashboard setup for this project:
-
-- Enable Google and Email/Password sign-in methods.
-- Enable Restricted mode if you only want invited users to access the app.
-- Invite only approved users (for example `hugo@orchardstreet.xyz`).
+- All other UI and API routes require a valid auth cookie from `/api/auth/login`.
 
 ## Production
 

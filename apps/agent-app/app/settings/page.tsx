@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { UserButton } from "@clerk/nextjs";
 
 interface GlobalSettings {
   anthropicApiKey: string;
@@ -212,6 +211,11 @@ export default function SettingsPage() {
     }
   }
 
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   return (
     <main className="min-h-screen bg-neutral-950 px-4 py-6 text-neutral-100">
       <div className="mx-auto w-full max-w-5xl rounded-xl border border-neutral-800 bg-neutral-900/80 p-5">
@@ -221,7 +225,13 @@ export default function SettingsPage() {
             <Link href="/" className="rounded-lg border border-neutral-700 px-3 py-1 text-sm">
               Back to mailbox
             </Link>
-            <UserButton />
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-lg border border-neutral-700 px-3 py-1 text-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
