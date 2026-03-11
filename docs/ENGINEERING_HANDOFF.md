@@ -27,7 +27,6 @@ This repo is designed so another coding agent can continue without chat history.
 
 - `ANTHROPIC_API_KEY`
 - `APP_PASSWORD`
-- `APP_AUTH_COOKIE_VALUE`
 - `TWITTER_MCP_URL`
 - `DISCORD_MCP_URL`
 - `SUPABASE_URL`

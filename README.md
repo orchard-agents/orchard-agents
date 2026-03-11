@@ -59,7 +59,6 @@ Use `.env.example` in each app as a template.
 For `apps/agent-app/.env.local`, add password auth values:
 
 - `APP_PASSWORD=Orchardagents123`
-- `APP_AUTH_COOKIE_VALUE=orchard-authenticated`
 
 3) Run services (separate terminals)
 

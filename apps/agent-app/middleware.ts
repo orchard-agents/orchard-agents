@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE_NAME, getAuthCookieValue } from "@/lib/password-auth";
+
+const AUTH_COOKIE_NAME = "orchard_password_auth";
+const AUTH_COOKIE_VALUE = "orchard-authenticated";
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -28,7 +30,7 @@ export default function middleware(req: NextRequest) {
 
   const sessionCookie = req.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-  if (sessionCookie === getAuthCookieValue()) {
+  if (sessionCookie === AUTH_COOKIE_VALUE) {
     return NextResponse.next();
   }
 
