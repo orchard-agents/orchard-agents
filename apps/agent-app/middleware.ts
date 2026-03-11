@@ -23,13 +23,13 @@ export default function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   if (isPublicPath(pathname)) {
-    return;
+    return NextResponse.next();
   }
 
   const sessionCookie = req.cookies.get(AUTH_COOKIE_NAME)?.value;
 
   if (sessionCookie === getAuthCookieValue()) {
-    return;
+    return NextResponse.next();
   }
 
   if (isApiPath(pathname)) {
