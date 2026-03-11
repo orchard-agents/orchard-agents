@@ -1,0 +1,16 @@
+{
+  "name": "orchard-agent",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "dev:agent": "pnpm --filter agent-app dev",
+    "dev:twitter": "pnpm --filter twitter-mcp dev",
+    "dev:discord": "pnpm --filter discord-mcp dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.2"
+  }
+}
