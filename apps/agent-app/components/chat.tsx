@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ORCHARD_DISCORD_SYSTEM_PROMPT, ORCHARD_TWITTER_SYSTEM_PROMPT } from "@/lib/agent";
+import {
+  ORCHARD_DISCORD_SYSTEM_PROMPT,
+  ORCHARD_INSTAGRAM_SYSTEM_PROMPT,
+  ORCHARD_LINKEDIN_SYSTEM_PROMPT,
+  ORCHARD_TWITTER_SYSTEM_PROMPT
+} from "@/lib/agent";
 import type { AgentConfig, AgentMessage, Conversation, CronJob, CronRun, JobFormState } from "./chat/types";
 import { Header } from "./layout/header";
 import { Sidebar } from "./layout/sidebar";
@@ -22,6 +27,16 @@ const defaultAgents: AgentConfig[] = [
     id: "discord-poster",
     name: "Discord Poster",
     systemPrompt: ORCHARD_DISCORD_SYSTEM_PROMPT
+  },
+  {
+    id: "ig-poster",
+    name: "Instagram Poster",
+    systemPrompt: ORCHARD_INSTAGRAM_SYSTEM_PROMPT
+  },
+  {
+    id: "linkedin-poster",
+    name: "LinkedIn Poster",
+    systemPrompt: ORCHARD_LINKEDIN_SYSTEM_PROMPT
   }
 ];
 
@@ -111,7 +126,13 @@ export function Chat() {
       }
 
       const data = (await response.json()) as {
-        settings?: { agents?: Array<{ agentId: string; name: string; integration: "twitter" | "discord" }> };
+        settings?: {
+          agents?: Array<{
+            agentId: string;
+            name: string;
+            integration: "twitter" | "discord" | "instagram" | "linkedin";
+          }>;
+        };
       };
 
       const fetchedAgents = data.settings?.agents ?? [];
@@ -122,8 +143,18 @@ export function Chat() {
       const nextAgents = fetchedAgents.map((agent) => ({
         id: agent.agentId,
         name: agent.name,
-        systemPrompt:
-          agent.integration === "discord" ? ORCHARD_DISCORD_SYSTEM_PROMPT : ORCHARD_TWITTER_SYSTEM_PROMPT
+        systemPrompt: (() => {
+          switch (agent.integration) {
+            case "discord":
+              return ORCHARD_DISCORD_SYSTEM_PROMPT;
+            case "instagram":
+              return ORCHARD_INSTAGRAM_SYSTEM_PROMPT;
+            case "linkedin":
+              return ORCHARD_LINKEDIN_SYSTEM_PROMPT;
+            default:
+              return ORCHARD_TWITTER_SYSTEM_PROMPT;
+          }
+        })()
       }));
 
       setAgents(nextAgents);
